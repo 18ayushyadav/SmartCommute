@@ -1,0 +1,76 @@
+{
+  "carpools": [
+    {
+      "id": 1,
+      "name": "Arjun Mehta",
+      "avatar": "AM",
+      "route": "Connaught Place → Kashmere Gate",
+      "time": "8:30 AM",
+      "seatsAvailable": 2,
+      "rating": 4.8,
+      "car": "Maruti Swift",
+      "costPerSeat": 30,
+      "verified": true
+    },
+    {
+      "id": 2,
+      "name": "Priya Sharma",
+      "avatar": "PS",
+      "route": "Rajiv Chowk → Civil Lines",
+      "time": "9:00 AM",
+      "seatsAvailable": 1,
+      "rating": 4.9,
+      "car": "Hyundai i20",
+      "costPerSeat": 25,
+      "verified": true
+    },
+    {
+      "id": 3,
+      "name": "Rohit Kumar",
+      "avatar": "RK",
+      "route": "Nehru Place → Chandni Chowk",
+      "time": "8:15 AM",
+      "seatsAvailable": 3,
+      "rating": 4.6,
+      "car": "Honda City",
+      "costPerSeat": 40,
+      "verified": false
+    },
+    {
+      "id": 4,
+      "name": "Sneha Patel",
+      "avatar": "SP",
+      "route": "Saket → ISBT",
+      "time": "9:30 AM",
+      "seatsAvailable": 2,
+      "rating": 4.7,
+      "car": "Tata Nexon",
+      "costPerSeat": 35,
+      "verified": true
+    },
+    {
+      "id": 5,
+      "name": "Vikram Singh",
+      "avatar": "VS",
+      "route": "Dwarka → CP",
+      "time": "7:45 AM",
+      "seatsAvailable": 1,
+      "rating": 4.5,
+      "car": "Maruti Baleno",
+      "costPerSeat": 50,
+      "verified": true
+    },
+    {
+      "id": 6,
+      "name": "Anjali Verma",
+      "avatar": "AV",
+      "route": "Noida → Connaught Place",
+      "time": "8:00 AM",
+      "seatsAvailable": 2,
+      "rating": 4.9,
+      "car": "Hyundai Creta",
+      "costPerSeat": 45,
+      "verified": true
+    }
+  ]
+}

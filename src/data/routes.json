@@ -1,0 +1,72 @@
+{
+  "routes": [
+    {
+      "id": 1,
+      "type": "fastest",
+      "label": "Fastest Route",
+      "time": 28,
+      "cost": 45,
+      "distance": 12.3,
+      "crowdLevel": "High",
+      "modes": ["metro", "walking"],
+      "color": "#6366f1",
+      "coordinates": [
+        [28.6139, 77.2090],
+        [28.6200, 77.2150],
+        [28.6280, 77.2200],
+        [28.6350, 77.2280],
+        [28.6429, 77.2300],
+        [28.6508, 77.2373]
+      ]
+    },
+    {
+      "id": 2,
+      "type": "cheapest",
+      "label": "Cheapest Route",
+      "time": 45,
+      "cost": 15,
+      "distance": 14.1,
+      "crowdLevel": "Medium",
+      "modes": ["bus", "walking"],
+      "color": "#10b981",
+      "coordinates": [
+        [28.6139, 77.2090],
+        [28.6180, 77.2050],
+        [28.6250, 77.2100],
+        [28.6320, 77.2180],
+        [28.6400, 77.2250],
+        [28.6460, 77.2320],
+        [28.6508, 77.2373]
+      ]
+    },
+    {
+      "id": 3,
+      "type": "leastCrowded",
+      "label": "Least Crowded",
+      "time": 38,
+      "cost": 85,
+      "distance": 13.5,
+      "crowdLevel": "Low",
+      "modes": ["carpool", "walking"],
+      "color": "#f59e0b",
+      "coordinates": [
+        [28.6139, 77.2090],
+        [28.6160, 77.2180],
+        [28.6220, 77.2260],
+        [28.6310, 77.2310],
+        [28.6420, 77.2350],
+        [28.6508, 77.2373]
+      ]
+    }
+  ],
+  "locations": {
+    "source": {
+      "name": "Connaught Place",
+      "coords": [28.6139, 77.2090]
+    },
+    "destination": {
+      "name": "Kashmere Gate",
+      "coords": [28.6508, 77.2373]
+    }
+  }
+}

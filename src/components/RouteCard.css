@@ -1,0 +1,208 @@
+/* ================== */
+/*   Route Card CSS   */
+/* ================== */
+
+.route-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  transition: all var(--transition-base);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.route-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--route-color, var(--primary));
+  transition: height var(--transition-fast);
+}
+
+.route-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--route-color, var(--primary));
+}
+
+.route-card:hover::before {
+  height: 5px;
+}
+
+.route-card.highlighted {
+  border-color: var(--route-color, var(--primary));
+  box-shadow: 0 0 0 3px var(--primary-glow), var(--shadow-lg);
+}
+
+.route-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.route-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.route-type-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.route-card-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.route-card-badges {
+  display: flex;
+  gap: 6px;
+}
+
+.route-badge {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.route-badge.recommended {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+.route-badge.favorite {
+  background: var(--warning);
+  color: white;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.route-badge.favorite:hover {
+  transform: scale(1.1);
+}
+
+.route-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.route-stat {
+  text-align: center;
+  padding: 10px 8px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.route-stat:hover {
+  background: var(--primary-glow);
+}
+
+.route-stat-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.route-stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+.route-card-modes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mode-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.mode-tag:hover {
+  border-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.route-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
+}
+
+.crowd-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.crowd-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.crowd-dot.low { background: var(--success); }
+.crowd-dot.medium { background: var(--warning); }
+.crowd-dot.high { background: var(--danger); }
+
+.fav-btn {
+  background: none;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+  padding: 4px;
+}
+
+.fav-btn:hover,
+.fav-btn.active {
+  color: var(--warning);
+  transform: scale(1.2);
+}
+
+@media (max-width: 480px) {
+  .route-card-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .route-stat-value {
+    font-size: 1rem;
+  }
+}
