@@ -1,17 +1,82 @@
 import { useState, useEffect } from 'react';
 import { FiSearch, FiMapPin, FiNavigation, FiClock, FiX } from 'react-icons/fi';
+import { toast } from 'react-toastify';
 import MapComponent from './MapComponent';
 import RouteCard from './RouteCard';
 import SkeletonLoader from './SkeletonLoader';
-import routesData from '../data/routes.json';
 import './RoutePlanner.css';
 
 const RECENT_KEY = 'smartcommute_recent';
 const FAV_KEY = 'smartcommute_favorites';
 
+async function geocode(address) {
+  const targetUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+  const res = await fetch(proxyUrl);
+  const data = await res.json();
+  if (data && data.length > 0) {
+    return {
+      name: data[0].display_name.split(',')[0],
+      coords: [parseFloat(data[0].lat), parseFloat(data[0].lon)]
+    };
+  }
+  return null;
+}
+
+async function getRoute(srcCoords, destCoords) {
+  try {
+    const srcLonLat = `${srcCoords[1]},${srcCoords[0]}`;
+    const destLonLat = `${destCoords[1]},${destCoords[0]}`;
+    
+    // Direct call, OSRM supports CORS natively
+    const url = `https://router.project-osrm.org/route/v1/driving/${srcLonLat};${destLonLat}?overview=full&geometries=geojson`;
+    const res = await fetch(url);
+    const data = await res.json();
+    
+    if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+      const route = data.routes[0];
+      const coordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+      const distanceKm = (route.distance / 1000).toFixed(1);
+      const durationMin = Math.round(route.duration / 60);
+      return { coordinates, distanceKm, durationMin };
+    }
+  } catch (err) {
+    console.warn("OSRM routing failed (possibly rate limit), falling back to straight-line math.", err);
+  }
+
+  // Fallback: Haversine distance and straight-line points
+  const toRad = p => p * Math.PI / 180;
+  const R = 6371; // Earth's radius in km
+  
+  const dLat = toRad(destCoords[0] - srcCoords[0]);
+  const dLon = toRad(destCoords[1] - srcCoords[1]);
+  const lat1 = toRad(srcCoords[0]);
+  const lat2 = toRad(destCoords[0]);
+
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  
+  const distRaw = (R * c);
+  const distanceKm = distRaw.toFixed(1);
+  const durationMin = Math.round(distRaw * 1.5); // assume ~40km/h average straight line
+
+  const midLat = (srcCoords[0] + destCoords[0]) / 2;
+  const midLon = (srcCoords[1] + destCoords[1]) / 2;
+
+  return {
+    coordinates: [srcCoords, [midLat, midLon], destCoords],
+    distanceKm: distanceKm,
+    durationMin: durationMin > 0 ? durationMin : 5
+  };
+}
+
 export default function RoutePlanner() {
-  const [source, setSource] = useState('Connaught Place');
-  const [destination, setDestination] = useState('Kashmere Gate');
+  const [source, setSource] = useState('');
+  const [destination, setDestination] = useState('');
+  const [resolvedSource, setResolvedSource] = useState(null);
+  const [resolvedDestination, setResolvedDestination] = useState(null);
+  
   const [optimizeMode, setOptimizeMode] = useState('time');
   const [filter, setFilter] = useState('none');
   const [routes, setRoutes] = useState([]);
@@ -44,14 +109,13 @@ export default function RoutePlanner() {
     if (optimizeMode === 'cost') {
       return routeList.reduce((a, b) => a.cost < b.cost ? a : b).id;
     }
-    // comfort = least crowded
     const crowdOrder = { low: 0, medium: 1, high: 2 };
     return routeList.reduce((a, b) =>
       crowdOrder[a.crowdLevel.toLowerCase()] < crowdOrder[b.crowdLevel.toLowerCase()] ? a : b
     ).id;
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!source.trim() || !destination.trim()) return;
 
     setLoading(true);
@@ -64,20 +128,91 @@ export default function RoutePlanner() {
       return [searchEntry, ...filtered].slice(0, 5);
     });
 
-    // Simulate loading
-    setTimeout(() => {
-      let sortedRoutes = [...routesData.routes];
+    try {
+      // 1. Geocode
+      const srcLoc = await geocode(source);
+      const destLoc = await geocode(destination);
 
-      if (filter === 'cost') {
-        sortedRoutes.sort((a, b) => a.cost - b.cost);
-      } else if (filter === 'time') {
-        sortedRoutes.sort((a, b) => a.time - b.time);
+      if (!srcLoc || !destLoc) {
+        toast.error('Could not find one or both locations. Try being more specific.', { theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light' });
+        setLoading(false);
+        return;
       }
 
-      setRoutes(sortedRoutes);
+      setResolvedSource(srcLoc);
+      setResolvedDestination(destLoc);
+
+      // 2. Get route
+      const routeData = await getRoute(srcLoc.coords, destLoc.coords);
+
+      if (!routeData) {
+         toast.error('Could not find a valid route between these locations.', { theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light' });
+         setLoading(false);
+         return;
+      }
+
+      const { coordinates, distanceKm, durationMin } = routeData;
+      const baseDist = parseFloat(distanceKm);
+      const baseTime = durationMin;
+
+      // Ensure minimum values
+      const fastestTime = Math.max(baseTime, 5);
+      const fastestCost = Math.max(Math.round(baseDist * 15), 10);
+      
+      let generatedRoutes = [
+        {
+          id: 1,
+          type: "fastest",
+          label: "Fastest Route",
+          time: fastestTime,
+          cost: fastestCost,
+          distance: baseDist,
+          crowdLevel: "High",
+          modes: ["metro", "walking"],
+          color: "#6366f1",
+          coordinates: coordinates
+        },
+        {
+          id: 2,
+          type: "cheapest",
+          label: "Cheapest Route",
+          time: Math.max(Math.round(baseTime * 1.4), 8),
+          cost: Math.max(Math.round(baseDist * 5), 5),
+          distance: baseDist,
+          crowdLevel: "Medium",
+          modes: ["bus", "walking"],
+          color: "#10b981",
+          coordinates: coordinates
+        },
+        {
+          id: 3,
+          type: "leastCrowded",
+          label: "Least Crowded",
+          time: Math.max(Math.round(baseTime * 1.1), 6),
+          cost: Math.max(Math.round(baseDist * 25), 20),
+          distance: baseDist,
+          crowdLevel: "Low",
+          modes: ["carpool", "walking"],
+          color: "#f59e0b",
+          coordinates: coordinates
+        }
+      ];
+
+      if (filter === 'cost') {
+        generatedRoutes.sort((a, b) => a.cost - b.cost);
+      } else if (filter === 'time') {
+        generatedRoutes.sort((a, b) => a.time - b.time);
+      }
+
+      setRoutes(generatedRoutes);
       setLoading(false);
       setSearched(true);
-    }, 1500);
+
+    } catch (err) {
+      console.error(err);
+      toast.error('An error occurred while fetching route data.', { theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light' });
+      setLoading(false);
+    }
   };
 
   const handleRecentClick = (search) => {
@@ -114,7 +249,7 @@ export default function RoutePlanner() {
             <input
               id="source-input"
               type="text"
-              placeholder="Enter source location"
+              placeholder="Enter source location (e.g. Times Square)"
               value={source}
               onChange={(e) => setSource(e.target.value)}
             />
@@ -125,7 +260,7 @@ export default function RoutePlanner() {
             <input
               id="dest-input"
               type="text"
-              placeholder="Enter destination"
+              placeholder="Enter destination (e.g. Central Park)"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
             />
@@ -169,8 +304,8 @@ export default function RoutePlanner() {
               <option value="time">Shortest Time</option>
             </select>
 
-            <button className="search-btn" onClick={handleSearch} id="search-btn">
-              <FiSearch /> Find Routes
+            <button className="search-btn" onClick={handleSearch} id="search-btn" disabled={loading}>
+              <FiSearch /> {loading ? 'Searching...' : 'Find Routes'}
             </button>
           </div>
         </div>
@@ -184,8 +319,8 @@ export default function RoutePlanner() {
             ) : (
               <MapComponent
                 routes={routes}
-                source={routesData.locations.source}
-                destination={routesData.locations.destination}
+                source={resolvedSource}
+                destination={resolvedDestination}
                 highlightedRoute={highlightedRoute}
               />
             )}
