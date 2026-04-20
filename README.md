@@ -133,7 +133,7 @@ npm start
 
 ## 🌐 Live Demo
 
-👉 https://your-project-link.vercel.app
+👉 https://smartcommute-khaki.vercel.app
 
 ---
 
@@ -161,8 +161,8 @@ This project was built as a **real-world problem-solving application** to demons
 
 **Ayush Yadav**
 
-* LinkedIn: https://linkedin.com/in/your-profile
-* GitHub: https://github.com/your-username
+* LinkedIn: https://linkedin.com/in/ayushyadav18
+* GitHub: https://github.com/18ayushyadav
 
 ---
 
